@@ -1,63 +1,43 @@
-from django.shortcuts import render, redirect
-
-from django.http import HttpResponse
+from django.shortcuts import render
+from django.views.generic import ListView, DetailView, CreateView
 
 from .models import Author, Book
+from .form import BookForm
 
-import requests, json
 
-
-menu = ["Авторы", "Книги", "Заголовки"]
+menu = ["Авторы", "Книги"]
 
 
 def index(request):
     books = Book.objects.all()
-    return render(request, "index.html", {'books': books, 'menu':menu, 'title':'Книги'})
-
-
-def book(request):
-    books = Book.objects.all()
     context = {
-        'books': books
+        'menu': menu,
+         'title': 'Добро пожаловать на наш сайт!',
+         'book_form': BookForm()
+
     }
-    return render(request, 'book_list.html', context=context)
+    return render(request, "index.html", context=context)
 
 
-def detail(request, book_id):
-    book = Book.objects.filter(id=book_id).first()
-    context = {
-        'book': book
-    }
-    return render(request, 'book_detail.html', context=context)
+class AuthorList(ListView):
+    model = Author
+    template_name = 'author_list.html'
+    context_object_name = 'authors'
 
 
-def search(request):
-    title = request.GET.get('title')
-    books = Book.objects.filter(title=title)
-    context = {
-        'books': books
-    }
-    return render(request, 'search.html', context)
+class BookList(ListView):
+    model = Book
+    template_name = 'book_list.html'
+    context_object_name = 'books'
 
 
-def update(request, book_id):
-    try:
-        title = request.GET.get('title')
-    except KeyError:
-        book = Book.objects.filter(id=book_id).first()
-        book.save()
-        context = {
-            'book': book
-    }
-        return render(request, 'book_update.html', context=context)
-    return redirect('book/')
+class BookDetail(DetailView):
+    model = Book
+    template_name = 'book_detail.html'
+    pk_url_kwarg = 'book_id'
 
 
-def delete(request, book_id):
-    book = Book.objects.filter(id=book_id).first()
-    book.save()
-    context = {
-        'book': book
-    }
-    return render(request, 'book_detail.html', context=context)
-
+class BookCreateView(CreateView):
+    model = Book
+    form_class = BookForm
+    template_name = 'index.html'
